@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "./AdminPage.css";
 
 const AdminPage = () => {
 
@@ -27,13 +28,14 @@ const AdminPage = () => {
   };
 
   return (
-    <div>
+    <div className="container">
       <h2>Admin Page</h2>
-      <div style={{ marginTop: "20px" }}>
+      <div className="large-box">
         <h3>VM Count</h3>
         <p>Current Count: {vm_count}</p>
-        <button onClick={() => modifyVmCount("+")}>Increase</button>
-        <button onClick={() => modifyVmCount("-")}>Decrease</button>
+        <button className = "button" onClick={() => modifyVmCount("+")}>Increase</button>
+        <br></br>
+        <button className = "button" onClick={() => modifyVmCount("-")}>Decrease</button>
         {count_err && <p style={{ color: "red" }}>{count_err}</p>}
       </div>
     </div>
