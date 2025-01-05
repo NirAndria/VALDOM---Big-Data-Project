@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./UploadPage.css";
 
 const UploadPage = () => {
-  const [filePath1, setFilePath1] = useState("");
-  const [filePath2, setFilePath2] = useState("");
+  const [filePath1, setFilePath1] = useState("Choose a file");
+  const [filePath2, setFilePath2] = useState("Choose a file");
   const [vm_count, setVmCount] = useState(1);
   const [count_err, setCountError] = useState("");
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const UploadPage = () => {
     setFilePath1(file ? file.name : "");
   };
 
-  const handleFileChange2 = (event) => {
+  const handleFileChange2 = (event) => { 
     const file = event.target.files[0];
     setFilePath2(file ? file.name : "");
   };
@@ -41,59 +42,58 @@ const UploadPage = () => {
   };
 
   const handleUpload = async (e) => {
-      e.preventDefault();
+      e.preventDefault(); // prevent the page from refreshing 
       setError("");
+      console.log('It is it')
       try {
-        navigate("/admin"); // Redirect to upload page on success
+        if (filePath1 === "Choose a file" || filePath2 === "Choose a file"){
+          console.log('It is it')
+          setError("You have to select file before uploading")
+        } else {
+
+          navigate("/admin"); // Redirect to upload page on success
+
+        }
+
       } catch (error) {
+        
         setError(error || "Invalid credentials");
       }
     };
 
   return (
-    <div>
-      <h2>File Selector Page</h2>
-      <div>
-        <label htmlFor="fileInput1">Select File 1:</label>
-        <input
-          type="file"
-          id="fileInput1"
-          onChange={handleFileChange1}
-          style={{ marginLeft: "10px" }}
-        />
-        <textarea
-          value={filePath1}
-          readOnly
-          style={{ display: "block", marginTop: "10px", width: "300px", height: "30px" }}
-        />
+    <div className="container">
+      <div className="large-box">
+        <h2>File Selector Page</h2>
+        <div className="file-input-wrapper">
+          <label htmlFor="fileInput1" className="custom-file-label">
+            {filePath1}
+          </label>
+          <input type="file" id="fileInput1" className="file-input"  onChange={handleFileChange1}/>
+          <br></br>
+          <br></br>          
+          <label htmlFor="fileInput2" className="custom-file-label">
+            {filePath2}
+          </label>
+          <input type="file" id="fileInput2" className="file-input" onChange={handleFileChange2}/>
+        </div>
       </div>
-      <div style={{ marginTop: "20px" }}>
-        <label htmlFor="fileInput2">Select File 2:</label>
-        <input
-          type="file"
-          id="fileInput2"
-          onChange={handleFileChange2}
-          style={{ marginLeft: "10px" }}
-        />
-        <textarea
-          value={filePath2}
-          readOnly
-          style={{ display: "block", marginTop: "10px", width: "300px", height: "30px" }}
-        />
+      <div className="right">
+        <div className="stacked-boxes">
+          <h3>VM Count</h3>
+          <p>Current Count: {vm_count}</p>
+          <button className = "button" onClick={() => modifyVmCount("+")}>Increase</button>
+          <br></br>
+          <button className = "button" onClick={() => modifyVmCount("-")}>Decrease</button>
+          {count_err && <p className="error-message" style={{ color: "red" }}>{count_err}</p>}
+        </div>
+        <div className="stacked-boxes">
+          <form onSubmit= {handleUpload}>
+            <button className = "button" type="submit">Upload</button>
+            {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
+          </form>
+        </div>
       </div>
-      <div style={{ marginTop: "20px" }}>
-        <h3>VM Count</h3>
-        <p>Current Count: {vm_count}</p>
-        <button onClick={() => modifyVmCount("+")}>Increase</button>
-        <button onClick={() => modifyVmCount("-")}>Decrease</button>
-        {count_err && <p style={{ color: "red" }}>{count_err}</p>}
-      </div>
-      <div>
-        <form onSubmit={handleUpload}>
-            <button type="submit">Upload</button>
-        </form>
-      </div>
-      
     </div>
   );
 };

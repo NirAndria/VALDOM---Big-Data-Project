@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/authService";
+import "./Login.css";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -21,10 +22,10 @@ const Login = () => {
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleLogin}>
+    <div className="login-container">
+      <h2 className="login-title">Login </h2>
+      {error && <p className="login-error" style={{ color: "red" }}>{error}</p>}
+      <form className="form-group" onSubmit={handleLogin}>
         <div>
           <label>Username:</label>
           <input
@@ -43,7 +44,7 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit">Login</button>
+        <button className="login-button" type="submit">Login</button>
       </form>
     </div>
   );
