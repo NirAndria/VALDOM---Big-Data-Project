@@ -9,7 +9,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-public class FileUploadController {
+public class UploadFile {
 
     @PostMapping("/upload-file")
     public ResponseEntity<?> uploadFile(@RequestBody Map<String, String> request) {
