@@ -7,10 +7,11 @@ const UploadPage = () => {
   const [filePath2, setFilePath2] = useState("Choose a file");
   const [vm_count, setVmCount] = useState(1);
   const [count_err, setCountError] = useState("");
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [error, setError] = useState("");
   const [uploadcolor, setUploadColor] = useState("");
   const [output, setOutput] = useState(1);
+  const [response, setResponse] = useState("");
 
 
   const handleFileChange1 = (event) => {
@@ -52,58 +53,53 @@ const UploadPage = () => {
           setError("You have to select file before uploading")
           setUploadColor("red")
         } else {
-          
-          setError("Upload successfull")
-          setUploadColor("green")
 
-        //   try {
-        //     // Send file path to backend
-        //     const res1 = await fetch("http://localhost:5000/api/upload-file", {
-        //       method: "POST",
-        //       headers: {
-        //         "Content-Type": "application/json",
-        //       },
-        //       body: JSON.stringify({ local_file_path: filePath1 }), // Pass the file path here
-        //     });
+          try {
+            // Send file path to backend
+            const res1 = await fetch("http://localhost:5000/api/upload-file", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ local_file_path: filePath1 }), // Pass the file path here
+            });
 
-        //     const data1 = await res1.json();
+            const data1 = await res1.json();
             
-        //     if (data1.success && data2.success) {
-        //       setResponse({ type: "success", message: data1.output });
-        //     } else {
-        //       setResponse({ type: "error", message: data1.error });
-        //     }
-        //   } catch (err) {
-        //     setResponse({ type: "error", message: "Failed to connect to the server" });
-        //   }
-        //   try{
-        //     const res2 = await fetch("http://localhost:5000/api/upload-file", {
-        //       method: "POST",
-        //       headers: {
-        //         "Content-Type": "application/json",
-        //       },
-        //       body: JSON.stringify({ local_file_path: filePath2 }), // Pass the file path here
-        //     });
+            if (data1.success) {
+              setResponse({ type: "success", message: data1.output });
+            } else {
+              setResponse({ type: "error", message: data1.error });
+            }
+           } catch (err) {
+             setResponse({ type: "error", message: "Failed to connect to the server" });
+           }
+           try{
+             const res2 = await fetch("http://localhost:5000/api/upload-file", {
+               method: "POST",
+               headers: {
+                 "Content-Type": "application/json",
+               },
+               body: JSON.stringify({ local_file_path: filePath2 }), // Pass the file path here
+             });
 
-        //     const data2 = await res2.json();
+             const data2 = await res2.json();
             
-        //     if (data2.success && data2.success) {
-        //       setResponse({ type: "success", message: data2.output });
-        //     } else {
-        //       setResponse({ type: "error", message: data2.error });
-        //     }
+             if (data2.success && data2.success) {
+               setResponse({ type: "success", message: data2.output });
+             } else {
+               setResponse({ type: "error", message: data2.error });
+             }
 
-        //   } catch(err) {
-        //     setResponse({ type: "error", message: "Failed to connect to the server" });
+           } catch(err) {
+             setResponse({ type: "error", message: "Failed to connect to the server" });
 
-        //   }
-      
+           }
             
-        //     const data2 = await res2.json();
-      
-        // };
+         };
 
-        }
+        // setError("Upload successfull")
+        // setUploadColor("green")
 
       } catch (error) {
         
