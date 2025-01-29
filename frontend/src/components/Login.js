@@ -12,13 +12,13 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
-    try {
-      await login(username, password);
-      navigate("/home"); // Redirect to home page on success
-    } catch (err) {
-      setError(err || "Invalid credentials");
-    }
+    navigate("/home");
+    // try {
+    //   await login(username, password);
+    //   navigate("/home"); 
+    // } catch (err) {
+    //   setError(err || "Invalid credentials");
+    // }
   };
 
   return (
@@ -32,7 +32,7 @@ const Login = () => {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            required
+            //required
           />
         </div>
         <div>
@@ -41,7 +41,7 @@ const Login = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
+            //required
           />
         </div>
         <button className="login-button" type="submit">Login</button>

@@ -1,60 +1,84 @@
 package com.example.backend.controller;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/upload_file")
 public class UploadFile {
 
-    @PostMapping("/upload-file")
-    public ResponseEntity<?> uploadFile(@RequestBody Map<String, String> request) {
-        String localFilePath = request.get("local_file_path");
+    @PostMapping
+    public String uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+        String currentDir = System.getProperty("user.dir");
+        String uploadDir =  currentDir + File.separator + "uploads";
+        File uploadFolder = new File(uploadDir);
 
-        if (localFilePath == null || localFilePath.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Missing local file path"));
+        if (!uploadFolder.exists()) {
+            uploadFolder.mkdir();
         }
 
-        String privateKeyPath = "/home/ubuntu/Infra/key_pair_5f.pem"; // Update this path
+        File serverFile = new File(uploadFolder, file.getOriginalFilename());
+        System.out.println("File's name is: " + file.getOriginalFilename());
+        System.out.println("File will be saved at: " + serverFile.getAbsolutePath());
+        file.transferTo(serverFile);
+        System.out.println("Transfer worked");  
+
+        String privateKeyPath = "C:/Users/nirin/Downloads/key_pair_69.pem"; // Update this path
         String remoteUser = "ubuntu";
-        String remoteHost = "18.212.10.118";
-        String remotePath = "/home/ubuntu/.ssh";
+        String remoteHost = "34.201.60.49";
+        String remotePath = "nfs_shared";
 
-        // SCP command
-        String[] command = {
-            "scp", "-i", privateKeyPath, localFilePath,
-            remoteUser + "@" + remoteHost + ":" + remotePath
-        };
-
+         String remoteDir = remotePath + "/nfs_shared";
+        String createDirCommand = "ssh -i " + privateKeyPath + " " + remoteUser + "@" + remoteHost +
+                                  " mkdir -p " + "/home/ubuntu/" + remotePath; // Check and create remote directory
+        System.out.println("command is: " + String.join(" ",createDirCommand));
         try {
-            // Execute the command
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.redirectErrorStream(true);
+            // Execute the command to create the directory if it doesn't exist
+            ProcessBuilder processBuilder = new ProcessBuilder(createDirCommand.split(" "));
+            processBuilder.inheritIO();  // Show output in console (for debugging)
             Process process = processBuilder.start();
-
-            // Capture output and error messages
-            StringBuilder output = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line).append("\n");
-                }
-            }
-
             int exitCode = process.waitFor();
 
             if (exitCode != 0) {
-                return ResponseEntity.status(500).body(Map.of("success", false, "error", output.toString()));
+                return "Error creating remote directory: Exit code " + exitCode;
             }
 
-            return ResponseEntity.ok(Map.of("success", true, "output", output.toString()));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("success", false, "error", e.getMessage()));
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return "Error creating remote directory: " + e.getMessage();
         }
+
+        String[] command = {
+            "scp",
+            "-i",
+            privateKeyPath,
+            "\"" + serverFile.getAbsolutePath() + "\"", // Enclose the local file path in quotes
+            remoteUser + "@" + remoteHost + ":" + remotePath + "/"   // Enclose the remote path in quotes
+        };
+
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.inheritIO();  // This ensures the output and error are displayed in the console
+    
+        try {
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();  // Wait for the command to finish
+            if (exitCode == 0) {
+                return "File uploaded and transferred successfully!";
+            } else {
+                return "Error: SCP command failed with exit code " + exitCode;
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return "Error executing SCP command: " + e.getMessage();
+        }
+    }
+
+    @GetMapping("/test")
+    public String testEndpoint() {
+        return "Server is running!";
     }
 }

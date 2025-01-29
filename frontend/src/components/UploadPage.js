@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
 import "./UploadPage.css";
 
 const UploadPage = () => {
-  const [filePath1, setFilePath1] = useState("Choose a file");
-  const [filePath2, setFilePath2] = useState("Choose a file");
+  const [fileName1, setfileName1] = useState("Choose a file");
+  const [fileName2, setfileName2] = useState("Choose a file");
+
+  const [file1, setfile1] = useState(null);
+  const [file2, setfile2] = useState(null);
+  
   const [vm_count, setVmCount] = useState(1);
   const [count_err, setCountError] = useState("");
   // const navigate = useNavigate();
@@ -12,16 +17,21 @@ const UploadPage = () => {
   const [uploadcolor, setUploadColor] = useState("");
   const [output, setOutput] = useState(1);
   const [response, setResponse] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
 
   const handleFileChange1 = (event) => {
-    const file = event.target.files[0];
-    setFilePath1(file ? file.name : "");
+    const fileInput = document.getElementById("fileInput1");
+    const file = fileInput.files[0];
+    setfile1(file)
+    setfileName1(file ? file.name : "");
+    
   };
 
   const handleFileChange2 = (event) => { 
     const file = event.target.files[0];
-    setFilePath2(file ? file.name : "");
+    setfile2(file)
+    setfileName2(file ? file.name : "");
   };
 
   const modifyVmCount = (op) => {
@@ -46,60 +56,53 @@ const UploadPage = () => {
   const handleUpload = async (e) => {
       e.preventDefault(); // prevent the page from refreshing 
       setError("");
-      console.log('It is it')
+
+      const formData1 = new FormData();
+      formData1.append("file", file1);
+
       try {
-        if (filePath1 === "Choose a file" || filePath2 === "Choose a file"){
+        if (fileName1 === "Choose a file" || fileName2 === "Choose a file"){
           console.log('It is it')
           setError("You have to select file before uploading")
           setUploadColor("red")
         } else {
 
           try {
-            // Send file path to backend
-            const res1 = await fetch("http://localhost:5000/api/upload-file", {
-              method: "POST",
+            const res1 = await axios.post("http://localhost:8080/api/upload_file", formData1, {
               headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "multipart/form-data",
+                "Access-Control-Allow-Origin": "*", 
               },
-              body: JSON.stringify({ local_file_path: filePath1 }), // Pass the file path here
             });
+      
+            alert("First file uploaded successfully!");
+          } catch (error) {
+            console.error("Error uploading file:", error);
+            alert("File upload failed.");
+          }
+           
+           try {
 
-            const data1 = await res1.json();
-            
-            if (data1.success) {
-              setResponse({ type: "success", message: data1.output });
-            } else {
-              setResponse({ type: "error", message: data1.error });
-            }
-           } catch (err) {
-             setResponse({ type: "error", message: "Failed to connect to the server" });
-           }
-           try{
-             const res2 = await fetch("http://localhost:5000/api/upload-file", {
-               method: "POST",
-               headers: {
-                 "Content-Type": "application/json",
-               },
-               body: JSON.stringify({ local_file_path: filePath2 }), // Pass the file path here
-             });
+            const formData2 = new FormData();
+            formData2.append("file", file2);
 
-             const data2 = await res2.json();
-            
-             if (data2.success && data2.success) {
-               setResponse({ type: "success", message: data2.output });
-             } else {
-               setResponse({ type: "error", message: data2.error });
-             }
-
-           } catch(err) {
-             setResponse({ type: "error", message: "Failed to connect to the server" });
-
-           }
+            const res2 = await axios.post("http://localhost:8080/api/upload_file", formData2, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                "Access-Control-Allow-Origin": "*", 
+              },
+            });
+      
+            alert("Second file uploaded successfully!");
+          } catch (error) {
+            console.error("Error uploading file:", error);
+            alert("File upload failed.");
+          }
             
          };
 
-        // setError("Upload successfull")
-        // setUploadColor("green")
+        //  setError("Upload successfull")
+        //  setUploadColor("green")
 
       } catch (error) {
         
@@ -113,13 +116,13 @@ const UploadPage = () => {
           <h2>File Selector Page</h2>
           <div className="file-input-wrapper">
             <label htmlFor="fileInput1" className="custom-file-label">
-              {filePath1}
+              {fileName1}
             </label>
             <input type="file" id="fileInput1" className="file-input"  onChange={handleFileChange1}/>
             <br></br>
             <br></br>          
             <label htmlFor="fileInput2" className="custom-file-label">
-              {filePath2}
+              {fileName2}
             </label>
             <input type="file" id="fileInput2" className="file-input" onChange={handleFileChange2}/>
           </div>
