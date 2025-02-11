@@ -8,8 +8,16 @@ import time
 app = Flask(__name__)
 
 #Explicitly specify the AWS credentials (you can replace these with your own values)
-aws_access_key_id = *****************************
-aws_secret_access_key =*********************************
+
+aws_access_key_id_path = os.path.join("..", "aws_access_key.txt")
+aws_secret_access_key_path = os.path.join("..", "aws_secret_access_key.txt")
+
+with open(aws_access_key_id_path, "r", encoding="utf-8") as file:
+    aws_access_key_id = file.read()
+
+with open(aws_secret_access_key_path, "r", encoding="utf-8") as file:
+    aws_secret_access_key = file.read()
+
 # Create EC2 client using the credentials
 ec2 = boto3.client('ec2', 
                    region_name='us-east-1',
