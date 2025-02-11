@@ -40,8 +40,8 @@ for reservation in response['Reservations']:
             launch_time = instance['LaunchTime']  # Capture launch time to sort
             
             instances.append({
-                'instance_id': instance_id,
-                'public_ip': public_ip,
-                'private_ip': private_ip,
-                'launch_time': launch_time
-            })
+                "instance_id": instance_id,
+                "public_ip": public_ip,
+                "private_ip": private_ip,
+                "launch_time": launch_time
+            })
