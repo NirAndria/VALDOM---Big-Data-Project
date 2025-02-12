@@ -17,7 +17,9 @@ const UploadPage = () => {
   const [uploadcolor, setUploadColor] = useState("");
   const [output, setOutput] = useState(1);
   const [response, setResponse] = useState("");
+  const [response_VM_add_rm, setResponse_VM_add_rm] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [instanceId, setInstanceId] = useState(null);
 
 
   const handleFileChange1 = (event) => {
@@ -34,10 +36,52 @@ const UploadPage = () => {
     setfileName2(file ? file.name : "");
   };
 
-  const modifyVmCount = (op) => {
+  const modifyVmCount = async (op) => {
+
+
     setCountError("");
+
+    try {
+      const response = await fetch("http://localhost:5000/get_worker_instances");
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();  // Parse JSON data from the response
+      
+      // Extract the first dictionary (first worker instance)
+      if (data && data.length > 0) {
+        const firstInstance = data[0];  // Get the first instance
+        setInstanceId(firstInstance.instance_id);  // Set the instance_id in state
+      } else {
+        console.log("No instances found.");
+      }
+    } catch (error) {
+      console.error("Error fetching worker instances:", error);
+    }
+
     if (op === '+') {
+
+
+      const response_VM_add_rm = await fetch('http://localhost:5000/create_worker_instances', {
+        method: 'POST',  // HTTP method
+        headers: {
+          'Content-Type': 'application/json'  // Content-Type header
+        },
+        body: JSON.stringify({
+          instance_count: 1,
+          master_instance_id: instanceId  // Pass any necessary values here
+        })
+      })
+        .then(response_VM_add_rm => response_VM_add_rm.json())  // Parse the JSON response
+        .then(data => {
+          console.log('Success:', data);  // Handle success
+        })
+        .catch((error) => {
+          console.error('Error:', error);  // Handle errors
+        });
+
       setVmCount( vm_count + 1)
+
     } else {
       
       if (vm_count - 1>=1){

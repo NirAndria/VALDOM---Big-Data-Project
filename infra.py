@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import boto3
 from botocore.exceptions import ClientError
 import random, string, os
@@ -6,6 +7,7 @@ import time
 
 
 app = Flask(__name__)
+CORS(app, resources={r"/create_Master": {"origins": "http://localhost:3000"}})
 
 #Explicitly specify the AWS credentials (you can replace these with your own values)
 
@@ -227,6 +229,9 @@ def create_worker_instances():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    # working command: curl -X POST http://localhost:5000/create_worker_instances -H "Content-Type: application/json" -d "{\"instance_count\": 1, \"master_instance_id\": \"i-00872456048581b48\"}"
+
         
 @app.route('/delete_all', methods=['POST'])
 def delete_all():
@@ -258,7 +263,71 @@ def delete_all():
 
         return jsonify({"message": "All instances, key pairs, and security groups (except default) deleted successfully"}), 200
     except ClientError as e:
-        return jsonify({"error": str(e)}), 500        
+        return jsonify({"error": str(e)}), 500     
+
+
+@app.route('/get_info', methods=['POST'])
+def get_info():
+    data = request.json
+    instance_count = data.get('instance_count',1)
+    instance_type = data.get('instance_type', 't2.micro')
+    key_name = data.get('key_name')
+    security_group_id = data.get('security_group_id')
+    try:
+
+        response = ec2.describe_instances()
+        for reservation in response['Reservations']:
+            for instance in reservation['Instances']:
+                # Check if the instance is running
+                if instance['State']['Name'] == 'running':
+                    instance_id = instance['InstanceId']
+                    public_ip = instance.get('PublicIpAddress', 'No public IP assigned')
+                    private_ip = instance.get('PrivateIpAddress', 'No private IP assigned')
+                    
+                    print(f"Instance ID: {instance_id}")
+                    print(f"Public IP: {public_ip}")
+                    print(f"Private IP: {private_ip}")
+                    print("-------------------------------")
+
+        # List to store instance information
+        instances = []
+        for reservation in response['Reservations']:
+            for instance in reservation['Instances']:
+                # Check if the instance is running
+                if instance['State']['Name'] == 'running':
+                    instance_id = instance['InstanceId']
+                    public_ip = instance.get('PublicIpAddress', 'No public IP assigned')
+                    private_ip = instance.get('PrivateIpAddress', 'No private IP assigned')
+                    launch_time = instance['LaunchTime']  # Capture launch time to sort
+                    
+                    instances.append({
+                        "instance_id": instance_id,
+                        "public_ip": public_ip,
+                        "private_ip": private_ip,
+                        "launch_time": launch_time
+                    })
+        
+        return jsonify(instances), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500   
+    
+@app.route('/delete_instance', methods=['POST'])
+def delete_instance():
+    try:
+        instance_id = request.json.get('instance_id')
+
+        if not instance_id:
+            return jsonify({"error": "Instance ID is required"}), 400
+        response = ec2.terminate_instances(InstanceIds=[instance_id])
+        terminated_instance_ids = [instance['InstanceId'] for instance in response['TerminatingInstances']]
+        if terminated_instance_ids:
+            print(f"Terminated instance: {terminated_instance_ids}")
+            return jsonify({"message": f"Instance {instance_id} terminated successfully"}), 200
+        else:
+            return jsonify({"error": "Failed to terminate instance"}), 500
+    except ClientError as e:
+        return jsonify({"error": str(e)}), 500
+
         
         
 if __name__ == '__main__':

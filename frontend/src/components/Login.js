@@ -6,13 +6,36 @@ import "./Login.css";
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [data, setResponseData] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+
+    try {
+      const response = await fetch("http://localhost:5000/create_Master", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}), 
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      setResponseData(data); // Store response in state
+    } catch (error) {
+      console.error("Error fetching info:", error);
+    }
+
+    
     navigate("/home");
+
     // try {
     //   await login(username, password);
     //   navigate("/home"); 
