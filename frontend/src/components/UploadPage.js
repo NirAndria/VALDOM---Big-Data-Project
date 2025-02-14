@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import "./UploadPage.css";
@@ -20,6 +20,7 @@ const UploadPage = () => {
   const [response_VM_add_rm, setResponse_VM_add_rm] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [instanceId, setInstanceId] = useState(null);
+  const [WorkersId, setWorkersId] = useState(null);
 
 
   const handleFileChange1 = (event) => {
@@ -36,66 +37,161 @@ const UploadPage = () => {
     setfileName2(file ? file.name : "");
   };
 
-  const modifyVmCount = async (op) => {
-
-
+  const getMaster = async () => {
     setCountError("");
-
+  
     try {
-      const response = await fetch("http://localhost:5000/get_worker_instances");
+      // Fetch worker instances and get the first one
+      const response = await fetch("http://localhost:5000/get_info", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+      });
+  
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-      const data = await response.json();  // Parse JSON data from the response
-      
-      // Extract the first dictionary (first worker instance)
+  
+      const data = await response.json();
+      console.log("Received instances:", data);
+  
       if (data && data.length > 0) {
-        const firstInstance = data[0];  // Get the first instance
-        setInstanceId(firstInstance.instance_id);  // Set the instance_id in state
+        const firstInstance = data[0];
+        // Set the instanceId here
+        setInstanceId(firstInstance.instance_id);
       } else {
         console.log("No instances found.");
+        return; // Stop execution if no instances found
       }
+  
     } catch (error) {
       console.error("Error fetching worker instances:", error);
+      return; // Stop execution if fetch fails
     }
-
-    if (op === '+') {
-
-
-      const response_VM_add_rm = await fetch('http://localhost:5000/create_worker_instances', {
-        method: 'POST',  // HTTP method
-        headers: {
-          'Content-Type': 'application/json'  // Content-Type header
-        },
-        body: JSON.stringify({
-          instance_count: 1,
-          master_instance_id: instanceId  // Pass any necessary values here
-        })
-      })
-        .then(response_VM_add_rm => response_VM_add_rm.json())  // Parse the JSON response
-        .then(data => {
-          console.log('Success:', data);  // Handle success
-        })
-        .catch((error) => {
-          console.error('Error:', error);  // Handle errors
+  };
+  
+  useEffect(() => {
+    if (instanceId) {
+      // Once instanceId is set, proceed with the next request
+      const createWorkerInstance = async () => {
+        // if (op === '+') {
+      try {
+        const response_VM_add_rm = await fetch('http://localhost:5000/create_worker_instances', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            instance_count: 1,
+            master_instance_id: instanceId
+          })
         });
 
-      setVmCount( vm_count + 1)
+        if (!response_VM_add_rm.ok) {
+          throw new Error("Failed to create worker instance");
+        }
 
-    } else {
-      
-      if (vm_count - 1>=1){
-
-        setVmCount( vm_count - 1 );
-
-      } else {
-        setCountError("You cannot have less than 1 virtual machine");
-
+        const data = await response_VM_add_rm.json();
+        console.log('Success:', data);
+      } catch (error) {
+        console.error('Error:', error);
       }
-      
+  
+      setVmCount(vm_count + 1);
+        // } else {
+        //   if (vm_count - 1 >= 1) {
+        //     setVmCount(vm_count - 1);
+        //   } else {
+        //     setCountError("You cannot have less than 1 virtual machine");
+        //   }
+        // }
+      };
+  
+      createWorkerInstance(); // Call function when instanceId is updated
+    }
+  }, [instanceId]);
+
+  const handleIncreaseVmCount = async () => {
+    await getMaster();  // Ensure the instanceId is set before proceeding
+};
+
+const getWorkers = async () => {
+  setCountError("");
+
+  try {
+    // Fetch worker instances and get the first one
+    const response = await fetch("http://localhost:5000/get_info", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
     }
 
-  };
+    const data = await response.json();
+    console.log("Received instances:", data);
+
+    if (data && data.length > 0) {
+      const WorkersInstance = data.slice(1).map(instance => instance.instance_id);;
+      // Set the instanceId here
+      setWorkersId(WorkersInstance);
+    } else {
+      console.log("No instances found.");
+      return; // Stop execution if no instances found
+    }
+
+  } catch (error) {
+    console.error("Error fetching worker instances:", error);
+    return; // Stop execution if fetch fails
+  }
+};
+
+useEffect(() => {
+  if (WorkersId) {
+    // Once instanceId is set, proceed with the next request
+    const deleteWorkerInstance = async () => {
+      // if (op === '+') {
+    try {
+      const response_VM_add_rm = await fetch('http://localhost:5000/delete_instance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          instance_id: WorkersId[0]
+        })
+      });
+
+      if (!response_VM_add_rm.ok) {
+        throw new Error("Failed to create worker instance");
+      }
+
+      const data = await response_VM_add_rm.json();
+      console.log('Success:', data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+
+    if (vm_count - 1 >= 1) {
+      setVmCount(vm_count - 1);
+    } else {
+      setCountError("You cannot have less than 1 virtual machine");
+    }
+    };
+
+    deleteWorkerInstance(); // Call function when instanceId is updated
+  }
+}, [WorkersId]);
+
+// const handleDecreaseVmCount = async () => {
+//   await modifyVmCount('-');  // Ensure the instanceId is set before proceeding
+// };
 
   const handleUpload = async (e) => {
       e.preventDefault(); // prevent the page from refreshing 
@@ -182,8 +278,8 @@ const UploadPage = () => {
         <div className="stacked-boxes">
           <h3>VM Count</h3>
           <p>Current Count: {vm_count}</p>
-          <button className = "button" onClick={() => modifyVmCount("+")}>Increase</button>
-          <button className = "button" onClick={() => modifyVmCount("-")}>Decrease</button>
+          <button className = "button" onClick={getMaster}>Increase</button>
+          <button className = "button" onClick={getWorkers}>Decrease</button>
           {count_err && <p className="error-message" style={{ color: "red" }}>{count_err}</p>}
         </div>
         <div className="stacked-boxes">

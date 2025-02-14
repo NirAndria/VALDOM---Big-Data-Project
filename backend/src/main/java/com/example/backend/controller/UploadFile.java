@@ -27,9 +27,14 @@ public class UploadFile {
         file.transferTo(serverFile);
         System.out.println("Transfer worked");  
 
-        String privateKeyPath = "C:/Users/nirin/Downloads/key_pair_69.pem"; // Update this path
+        String currentDirectory = System.getProperty("user.dir").replace("\\", "/");
+
+
+        System.out.println("Current Directory: " + currentDirectory);
+
+        String privateKeyPath = currentDirectory + "/key_pair/key_pair_master.pem" ; // Update this th
         String remoteUser = "ubuntu";
-        String remoteHost = "34.201.60.49";
+        String remoteHost = "54.164.139.60";
         String remotePath = "nfs_shared";
 
          String remoteDir = remotePath + "/nfs_shared";

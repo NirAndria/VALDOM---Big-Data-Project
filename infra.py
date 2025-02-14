@@ -7,7 +7,7 @@ import time
 
 
 app = Flask(__name__)
-CORS(app, resources={r"/create_Master": {"origins": "http://localhost:3000"}})
+CORS(app)
 
 #Explicitly specify the AWS credentials (you can replace these with your own values)
 
@@ -82,12 +82,12 @@ def add_instance():
 def create_key_pair():
     """Create a new key pair if one doesn't exist, and return the key name."""
     try:
-        key_name = 'key_pair_' + str(os.urandom(1).hex())  # Generate a random key name for uniqueness
+        key_name = 'key_pair_master' #+ str(os.urandom(1).hex())  # Generate a random key name for uniqueness
         response = ec2.create_key_pair(KeyName=key_name)  # Create the key pair
         key_material = response['KeyMaterial']
 
         # Save the private key to a .pem file
-        with open(f'{key_name}.pem', 'w') as key_file:
+        with open("./backend/" + f'{key_name}.pem', 'w') as key_file:
             key_file.write(key_material)
         
         print(f"Key pair created successfully, saved as '{key_name}.pem'")
@@ -306,7 +306,7 @@ def get_info():
                         "private_ip": private_ip,
                         "launch_time": launch_time
                     })
-        
+        print(instances)
         return jsonify(instances), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500   
