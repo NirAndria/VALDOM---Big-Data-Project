@@ -12,7 +12,8 @@ import java.io.IOException;
 public class UploadFile {
 
     @PostMapping
-    public String uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+    public String uploadFile(@RequestParam("file") MultipartFile file
+    @RequestParam("master_ip") String MasterIp ) throws IOException {
         String currentDir = System.getProperty("user.dir");
         String uploadDir =  currentDir + File.separator + "uploads";
         File uploadFolder = new File(uploadDir);
@@ -34,7 +35,7 @@ public class UploadFile {
 
         String privateKeyPath = currentDirectory + "/key_pair/key_pair_master.pem" ; // Update this th
         String remoteUser = "ubuntu";
-        String remoteHost = "54.164.139.60";
+        String remoteHost = MasterIp;
         String remotePath = "nfs_shared";
 
          String remoteDir = remotePath + "/nfs_shared";

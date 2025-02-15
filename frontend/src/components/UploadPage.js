@@ -21,6 +21,7 @@ const UploadPage = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [instanceId, setInstanceId] = useState(null);
   const [WorkersId, setWorkersId] = useState(null);
+  const [MasterIp, setMasterIp] = useState(null);
 
 
   const handleFileChange1 = (event) => {
@@ -189,16 +190,52 @@ useEffect(() => {
   }
 }, [WorkersId]);
 
-// const handleDecreaseVmCount = async () => {
-//   await modifyVmCount('-');  // Ensure the instanceId is set before proceeding
-// };
+const getMaster_upload = async () => {
+  setCountError("");
 
-  const handleUpload = async (e) => {
+  try {
+    // Fetch worker instances and get the first one
+    const response = await fetch("http://localhost:5000/get_info", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const data = await response.json();
+    console.log("Received instances:", data);
+
+    if (data && data.length > 0) {
+      const firstInstance = data[0];
+      // Set the instanceId here
+      setMasterIp(setInstanceId(firstInstance.public_ip));
+    } else {
+      console.log("No instances found.");
+      return; // Stop execution if no instances found
+    }
+
+  } catch (error) {
+    console.error("Error fetching worker instances:", error);
+    return; // Stop execution if fetch fails
+  }
+};
+
+useEffect(() => {
+  if (MasterIp) {
+    // Once instanceId is set, proceed with the next request
+    const handleUpload = async (e) => {
       e.preventDefault(); // prevent the page from refreshing 
       setError("");
 
       const formData1 = new FormData();
       formData1.append("file", file1);
+      formData1.append("master_ip", MasterIp);
+      
 
       try {
         if (fileName1 === "Choose a file" || fileName2 === "Choose a file"){
@@ -225,6 +262,7 @@ useEffect(() => {
 
             const formData2 = new FormData();
             formData2.append("file", file2);
+            formData2.append("master_ip", MasterIp);
 
             const res2 = await axios.post("http://localhost:8080/api/upload_file", formData2, {
               headers: {
@@ -250,6 +288,12 @@ useEffect(() => {
       }
     };
 
+    handleUpload(); // Call function when instanceId is updated
+  }
+}, [MasterIp]);
+
+  
+
   return (
     <div className="container_cstm">
         <div className="large-box">
@@ -268,7 +312,7 @@ useEffect(() => {
           </div>
           <br></br>   
           <div>
-            <form onSubmit= {handleUpload}>
+            <form onSubmit= {getMaster_upload}>
               <button className = "button" type="submit">Upload</button>
               {error && <p style={{ color: uploadcolor, marginTop: "10px" }}>{error}</p>}
             </form>

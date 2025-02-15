@@ -87,7 +87,7 @@ def create_key_pair():
         key_material = response['KeyMaterial']
 
         # Save the private key to a .pem file
-        with open("./backend/" + f'{key_name}.pem', 'w') as key_file:
+        with open("./backend/key_pair/" + f'{key_name}.pem', 'w') as key_file:
             key_file.write(key_material)
         
         print(f"Key pair created successfully, saved as '{key_name}.pem'")
