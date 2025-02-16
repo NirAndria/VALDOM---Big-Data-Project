@@ -23,6 +23,37 @@ const UploadPage = () => {
   const [WorkersId, setWorkersId] = useState(null);
   const [MasterIp, setMasterIp] = useState(null);
 
+  useEffect(() => {
+    const fetchMasterIp = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/get_info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+  
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+  
+        const data = await response.json();
+        console.log("Full API response:", data); // Debugging
+  
+        if (data && data.length > 0) {
+          console.log("Setting MasterIp:", data[0].public_ip);
+          setMasterIp(data[0].public_ip);
+        } else {
+          console.warn("No instances found in API response.");
+        }
+      } catch (error) {
+        console.error("Error fetching MasterIp:", error);
+      }
+    };
+  
+    fetchMasterIp();
+  }, []);
+  
+
 
   const handleFileChange1 = (event) => {
     const fileInput = document.getElementById("fileInput1");
@@ -190,107 +221,113 @@ useEffect(() => {
   }
 }, [WorkersId]);
 
-const getMaster_upload = async () => {
-  setCountError("");
+// const getMaster_upload = async () => {
+//   setCountError("");
+
+//   try {
+    
+//     // Fetch worker instances and get the first one
+//     const response = await fetch("http://localhost:5000/get_info", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify({})
+//     });
+
+//     console.log("it made it here")
+
+//     if (!response.ok) {
+//       throw new Error("Network response was not ok");
+//     }
+
+    
+//     const data = await response.json();
+//     console.log("Received instances:", data);
+
+//     if (data && data.length > 0) {
+//       const firstInstance = data[0];
+//       // Set the instanceId here
+//       setMasterIp(setInstanceId(firstInstance.public_ip));
+//     } else {
+//       console.log("No instances found.");
+//       return; // Stop execution if no instances found
+//     }
+
+//   } catch (error) {
+//     console.error("Error fetching worker instances:", error);
+//     return; // Stop execution if fetch fails
+//   }
+// };
+
+const handleUpload = async (e) => {
+  console.log('it made it here')
+  e.preventDefault(); // prevent the page from refreshing 
+  setError("");
+
+  const formData1 = new FormData();
+  formData1.append("file", file1);
+  formData1.append("master_ip", MasterIp);
+  
 
   try {
-    // Fetch worker instances and get the first one
-    const response = await fetch("http://localhost:5000/get_info", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({})
-    });
-
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    const data = await response.json();
-    console.log("Received instances:", data);
-
-    if (data && data.length > 0) {
-      const firstInstance = data[0];
-      // Set the instanceId here
-      setMasterIp(setInstanceId(firstInstance.public_ip));
+    if (fileName1 === "Choose a file" || fileName2 === "Choose a file"){
+      console.log('It is it')
+      setError("You have to select file before uploading")
+      setUploadColor("red")
     } else {
-      console.log("No instances found.");
-      return; // Stop execution if no instances found
-    }
+
+      try {
+        const res1 = await axios.post("http://localhost:8080/api/upload_file", formData1, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Access-Control-Allow-Origin": "*", 
+          },
+        });
+  
+        alert("First file uploaded successfully!");
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        alert("File upload failed.");
+      }
+       
+       try {
+
+        const formData2 = new FormData();
+        formData2.append("file", file2);
+        formData2.append("master_ip", MasterIp);
+
+        const res2 = await axios.post("http://localhost:8080/api/upload_file", formData2, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Access-Control-Allow-Origin": "*", 
+          },
+        });
+  
+        alert("Second file uploaded successfully!");
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        alert("File upload failed.");
+      }
+        
+     };
+
+    //  setError("Upload successfull")
+    //  setUploadColor("green")
 
   } catch (error) {
-    console.error("Error fetching worker instances:", error);
-    return; // Stop execution if fetch fails
+    
+    setError(error || "Invalid credentials");
   }
 };
 
-useEffect(() => {
-  if (MasterIp) {
-    // Once instanceId is set, proceed with the next request
-    const handleUpload = async (e) => {
-      e.preventDefault(); // prevent the page from refreshing 
-      setError("");
+// useEffect(() => {
+//   if (MasterIp) {
+//     // Once instanceId is set, proceed with the next request
 
-      const formData1 = new FormData();
-      formData1.append("file", file1);
-      formData1.append("master_ip", MasterIp);
-      
-
-      try {
-        if (fileName1 === "Choose a file" || fileName2 === "Choose a file"){
-          console.log('It is it')
-          setError("You have to select file before uploading")
-          setUploadColor("red")
-        } else {
-
-          try {
-            const res1 = await axios.post("http://localhost:8080/api/upload_file", formData1, {
-              headers: {
-                "Content-Type": "multipart/form-data",
-                "Access-Control-Allow-Origin": "*", 
-              },
-            });
-      
-            alert("First file uploaded successfully!");
-          } catch (error) {
-            console.error("Error uploading file:", error);
-            alert("File upload failed.");
-          }
-           
-           try {
-
-            const formData2 = new FormData();
-            formData2.append("file", file2);
-            formData2.append("master_ip", MasterIp);
-
-            const res2 = await axios.post("http://localhost:8080/api/upload_file", formData2, {
-              headers: {
-                "Content-Type": "multipart/form-data",
-                "Access-Control-Allow-Origin": "*", 
-              },
-            });
-      
-            alert("Second file uploaded successfully!");
-          } catch (error) {
-            console.error("Error uploading file:", error);
-            alert("File upload failed.");
-          }
-            
-         };
-
-        //  setError("Upload successfull")
-        //  setUploadColor("green")
-
-      } catch (error) {
-        
-        setError(error || "Invalid credentials");
-      }
-    };
-
-    handleUpload(); // Call function when instanceId is updated
-  }
-}, [MasterIp]);
+//     handleUpload(); // Call function when instanceId is updated
+//   }
+// }, [MasterIp]);
 
   
 
@@ -312,7 +349,7 @@ useEffect(() => {
           </div>
           <br></br>   
           <div>
-            <form onSubmit= {getMaster_upload}>
+            <form onSubmit= {handleUpload}>
               <button className = "button" type="submit">Upload</button>
               {error && <p style={{ color: uploadcolor, marginTop: "10px" }}>{error}</p>}
             </form>

@@ -12,8 +12,7 @@ import java.io.IOException;
 public class UploadFile {
 
     @PostMapping
-    public String uploadFile(@RequestParam("file") MultipartFile file
-    @RequestParam("master_ip") String MasterIp ) throws IOException {
+    public String uploadFile(@RequestParam("file") MultipartFile file , @RequestParam("master_ip") String MasterIp ) throws IOException {
         String currentDir = System.getProperty("user.dir");
         String uploadDir =  currentDir + File.separator + "uploads";
         File uploadFolder = new File(uploadDir);

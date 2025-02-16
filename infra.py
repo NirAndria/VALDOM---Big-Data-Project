@@ -7,7 +7,7 @@ import time
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 #Explicitly specify the AWS credentials (you can replace these with your own values)
 
