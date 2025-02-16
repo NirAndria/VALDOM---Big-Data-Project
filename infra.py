@@ -179,21 +179,30 @@ def create_Master():
                
 @app.route('/create_worker_instances', methods=['POST'])
 def create_worker_instances():
+    print("does it work 1")
     data = request.json
+    print("does it work 2")
     instance_count = data.get('instance_count', 1)
-    matser_instance_id = data.get('master_instance_id')
+    print("does it work 3")
+    master_instance_id = data.get('master_instance_id')
+    print("master receiveed: " + master_instance_id)
     
-    if not matser_instance_id:
+    if not master_instance_id:
         return jsonify({"error": "Master Instance ID is required"}), 400 
     try:
-        instance_details = ec2.describe_instances(
-            InstanceIds=[matser_instance_id]
-        )
+        print('this is ip infra : ' + master_instance_id)
+        try:
+            instance_details = ec2.describe_instances(InstanceIds=[master_instance_id])
+            print(instance_details)
+        except Exception as e:
+            print("Error describing instance:", str(e))
+        print('this worked 2')
         master_instance = instance_details['Reservations'][0]['Instances'][0]
         master_public_ip = master_instance.get('PublicIpAddress')
         key_name = master_instance.get('KeyName')
         security_groups = master_instance.get('SecurityGroups', [])
         security_group_id = security_groups[0]['GroupId']
+        print('this worked')
         
         response = ec2.run_instances(
             ImageId='ami-0e2c8caa4b6378d8c',  # Remplace par l'AMI Ubuntu

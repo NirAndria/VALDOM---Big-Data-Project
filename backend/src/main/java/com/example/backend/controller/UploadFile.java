@@ -61,6 +61,7 @@ public class UploadFile {
             "scp",
             "-i",
             privateKeyPath,
+            "-o", "StrictHostKeyChecking=no",
             "\"" + serverFile.getAbsolutePath() + "\"", // Enclose the local file path in quotes
             remoteUser + "@" + remoteHost + ":" + remotePath + "/"   // Enclose the remote path in quotes
         };

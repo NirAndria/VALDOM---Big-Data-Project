@@ -26,24 +26,30 @@ const UploadPage = () => {
   useEffect(() => {
     const fetchMasterIp = async () => {
       try {
-        const response = await fetch("http://localhost:5000/get_info", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
-        });
+        // Fetch the data only if it's not already set or fetched
+        if (!MasterIp) {
+          const response = await fetch("http://localhost:5000/get_info", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+          });
   
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
   
-        const data = await response.json();
-        console.log("Full API response:", data); // Debugging
+          const data = await response.json();
+          console.log("Full API response:", data);  // Debugging
   
-        if (data && data.length > 0) {
-          console.log("Setting MasterIp:", data[0].public_ip);
-          setMasterIp(data[0].public_ip);
-        } else {
-          console.warn("No instances found in API response.");
+          // Check if the data array is not empty
+          if (data && data.length > 0) {
+            console.log("Setting MasterIp:", data[0].public_ip);
+            setMasterIp(data[0].public_ip);
+            setInstanceId(data[0].instance_id)
+          } else {
+            console.warn("No instances found in API response.");
+            window.location.reload();
+          }
         }
       } catch (error) {
         console.error("Error fetching MasterIp:", error);
@@ -51,7 +57,8 @@ const UploadPage = () => {
     };
   
     fetchMasterIp();
-  }, []);
+  }, []);  // Fetch only when MasterIp is not already set
+  
   
 
 
@@ -103,51 +110,36 @@ const UploadPage = () => {
       return; // Stop execution if fetch fails
     }
   };
-  
-  useEffect(() => {
-    if (instanceId) {
-      // Once instanceId is set, proceed with the next request
-      const createWorkerInstance = async () => {
-        // if (op === '+') {
-      try {
-        const response_VM_add_rm = await fetch('http://localhost:5000/create_worker_instances', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            instance_count: 1,
-            master_instance_id: instanceId
-          })
-        });
 
-        if (!response_VM_add_rm.ok) {
-          throw new Error("Failed to create worker instance");
-        }
+  const createWorkerInstance = async () => {
+    // if (op === '+') {
+    console.log("ip is: ",instanceId)
+    try {
+      const response_VM_add_rm = await fetch('http://localhost:5000/create_worker_instances', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          instance_count: 1,
+          master_instance_id: instanceId
+        })
+      });
 
-        const data = await response_VM_add_rm.json();
-        console.log('Success:', data);
-      } catch (error) {
-        console.error('Error:', error);
+      if (!response_VM_add_rm.ok) {
+        throw new Error("Failed to create worker instance");
       }
-  
-      setVmCount(vm_count + 1);
-        // } else {
-        //   if (vm_count - 1 >= 1) {
-        //     setVmCount(vm_count - 1);
-        //   } else {
-        //     setCountError("You cannot have less than 1 virtual machine");
-        //   }
-        // }
-      };
-  
-      createWorkerInstance(); // Call function when instanceId is updated
-    }
-  }, [instanceId]);
 
-  const handleIncreaseVmCount = async () => {
-    await getMaster();  // Ensure the instanceId is set before proceeding
-};
+      const data = await response_VM_add_rm.json();
+      console.log('Success:', data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+
+
+    setVmCount(vm_count + 1);
+  };
+
 
 const getWorkers = async () => {
   setCountError("");
@@ -359,7 +351,7 @@ const handleUpload = async (e) => {
         <div className="stacked-boxes">
           <h3>VM Count</h3>
           <p>Current Count: {vm_count}</p>
-          <button className = "button" onClick={getMaster}>Increase</button>
+          <button className = "button" onClick={createWorkerInstance}>Increase</button>
           <button className = "button" onClick={getWorkers}>Decrease</button>
           {count_err && <p className="error-message" style={{ color: "red" }}>{count_err}</p>}
         </div>
