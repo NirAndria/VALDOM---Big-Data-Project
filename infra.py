@@ -285,37 +285,38 @@ def get_info():
     try:
 
         response = ec2.describe_instances()
-        for reservation in response['Reservations']:
-            for instance in reservation['Instances']:
-                # Check if the instance is running
-                if instance['State']['Name'] == 'running':
-                    instance_id = instance['InstanceId']
-                    public_ip = instance.get('PublicIpAddress', 'No public IP assigned')
-                    private_ip = instance.get('PrivateIpAddress', 'No private IP assigned')
-                    
-                    print(f"Instance ID: {instance_id}")
-                    print(f"Public IP: {public_ip}")
-                    print(f"Private IP: {private_ip}")
-                    print("-------------------------------")
-
-        # List to store instance information
         instances = []
+
         for reservation in response['Reservations']:
             for instance in reservation['Instances']:
-                # Check if the instance is running
                 if instance['State']['Name'] == 'running':
                     instance_id = instance['InstanceId']
                     public_ip = instance.get('PublicIpAddress', 'No public IP assigned')
                     private_ip = instance.get('PrivateIpAddress', 'No private IP assigned')
-                    launch_time = instance['LaunchTime']  # Capture launch time to sort
-                    
+                    public_dns = instance.get('PublicDnsName', 'No public DNS assigned')
+                    launch_time = instance['LaunchTime']
+
                     instances.append({
-                        "instance_id": instance_id,
-                        "public_ip": public_ip,
-                        "private_ip": private_ip,
-                        "launch_time": launch_time
+                        'instance_id': instance_id,
+                        'public_ip': public_ip,
+                        'private_ip': private_ip,
+                        'public_dns': public_dns,
+                        'launch_time': launch_time
                     })
-        print(instances)
+
+        # Trier les instances par temps de lancement (la première instance lancée sera le Namenode)
+        instances.sort(key=lambda x: x['launch_time'])
+
+        # IP des instances (Namenode et Datanode)
+        namenode_ip = instances[0]['public_ip'] if instances else None
+        datanode_ip = instances[1]['public_ip'] if len(instances) > 1 else None
+
+        if namenode_ip and datanode_ip:
+            print(f"IP du Namenode : {namenode_ip}")
+            print(f"IP du Datanode : {datanode_ip}")
+
+
+
         return jsonify(instances), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500   

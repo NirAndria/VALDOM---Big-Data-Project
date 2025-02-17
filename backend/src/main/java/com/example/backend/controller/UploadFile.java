@@ -38,8 +38,8 @@ public class UploadFile {
         String remotePath = "nfs_shared";
 
          String remoteDir = remotePath + "/nfs_shared";
-        String createDirCommand = "ssh -i " + privateKeyPath + " " + remoteUser + "@" + remoteHost +
-                                  " mkdir -p " + "/home/ubuntu/" + remotePath; // Check and create remote directory
+        String createDirCommand = "ssh -i " + privateKeyPath + " -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
+                        + remoteUser + "@" + remoteHost + " mkdir -p /home/ubuntu/" + remotePath; // Check and create remote directory
         System.out.println("command is: " + String.join(" ",createDirCommand));
         try {
             // Execute the command to create the directory if it doesn't exist
